@@ -5,7 +5,6 @@ const cors = require("cors");
 const port = process.env.PORT || 5000;
 require("dotenv").config();
 
-
 // middleware
 app.use(express.json());
 app.use(cors());
@@ -22,43 +21,65 @@ const client = new MongoClient(uri, {
   },
 });
 
-
-
 async function run() {
-    try {
-      // Connect the client to the server	(optional starting in v4.7)
-      // await client.connect();
-      // Get the database and collection on which to run the operation
-      await client.db("admin").command({ ping: 1 });
+  try {
+    // Connect the client to the server	(optional starting in v4.7)
+    // await client.connect();
+    // Get the database and collection on which to run the operation
+    await client.db("admin").command({ ping: 1 });
 
-      // db collections
-      const usersCollection = client.db("dreamHomeDB").collection("users");
-      // admin related api
-      app.get('/users', async (req, res) => {
-        const result = await usersCollection.find().toArray();
-        res.send(result);
-      })
-      app.post('/users', async (req, res) => {
-        const user = req.body;
-        // if user already exist
-        const query = { email: user.email };
-        const existingUser = await usersCollection.findOne(query);
-        if (existingUser) {
-          return res.send({message: 'user already exist', insertedId: null})
-        }
-        const result = await usersCollection.insertOne(user);
-        res.send(result);
-      })
-      app.delete('/users/:id', async (req, res) => {
-        const id = req.params.id;
-        const query = { _id: new ObjectId(id) };
-        const result = await usersCollection.deleteOne(query);
-        res.send(result);
-      })
-      console.log(
-        "Pinged your deployment. You successfully connected to MongoDB!"
+    // db collections
+    const usersCollection = client.db("dreamHomeDB").collection("users");
+    // admin related api
+    app.get("/users", async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      // if user already exist
+      const query = { email: user.email };
+      const existingUser = await usersCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "user already exist", insertedId: null });
+      }
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await usersCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    app.get("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await usersCollection.findOne(query);
+      res.send(result);
+    });
+    app.patch("/users/role/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const options = { upsert: true };
+      const filter = { _id: new ObjectId(id) };
+      const updatedData = {
+        $set: {
+          role: data.role,
+        },
+      };
+      const result = await usersCollection.updateOne(
+        filter,
+        updatedData,
+        options
       );
-    } finally {
+      res.send(result);
+    });
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
+  } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
   }
