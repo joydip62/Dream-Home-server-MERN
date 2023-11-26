@@ -45,14 +45,14 @@ async function run() {
       if (!req.headers.authorization) {
         return res.status(401).send({ message: "unauthorized" });
       }
-      const token = req.headers.authorization.split(" ")[1];
+      const token = req.headers.authorization.split(' ')[1];
       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
           return res.status(401).send({ message: "unauthorized" });
         }
         req.decoded = decoded;
         next();
-      });
+      })
     };
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
@@ -64,25 +64,44 @@ async function run() {
       }
       next();
     };
+
     // admin related api
-    app.get("users/role/:email", verifyToken, verifyAdmin, async (req, res) => {
+    app.get("/users/role/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       if (email !== req.decoded.email) {
         return res.status(403).send({ message: "forbidden access" });
       }
-
       const query = { email: email };
       const user = await usersCollection.findOne(query);
       let admin = false;
       let agent = false;
       if (user) {
         admin = user?.role === "admin";
-      } else if (user) {
         agent = user?.role === "agent";
       }
       res.send({ admin, agent });
     });
-    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
+
+    // agent related api
+    // app.get("/users/agent/:email", verifyToken, async (req, res) => {
+    //   const email = req.params.email;
+    //   if (email !== req.decoded.email) {
+    //     return res.status(403).send({ message: "forbidden access" });
+    //   }
+    //   const query = { email: email };
+    //   const user = await usersCollection.findOne(query);
+    //   let agent = false;
+    //   if (user) {
+        
+    //   }
+    //   res.send({ agent });
+    // });
+
+
+
+
+
+    app.get("/users", verifyToken, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -97,7 +116,7 @@ async function run() {
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
-    app.get("/users/:id", verifyToken, verifyAdmin, async (req, res) => {
+    app.get("/users/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await usersCollection.findOne(query);
