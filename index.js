@@ -30,6 +30,7 @@ async function run() {
 
     // db collections
     const usersCollection = client.db("dreamHomeDB").collection("users");
+    const propertiesCollection = client.db("dreamHomeDB").collection("properties");
 
     // jwt token api
     app.post("/jwt", async (req, res) => {
@@ -64,7 +65,19 @@ async function run() {
       }
       next();
     };
+    
+    const verifyAgent = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const isAgent = user?.role === "agent";
+      if (!isAgent) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
 
+// =============================== admin ======================================
     // admin related api
     app.get("/users/role/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -147,6 +160,33 @@ async function run() {
       const result = await usersCollection.deleteOne(query);
       res.send(result);
     });
+
+    // ================================ agent ====================================
+    app.get("/properties", verifyToken, verifyAgent, async (req, res) => {
+      const result = await propertiesCollection.find().toArray();
+      res.send(result);
+    });
+    app.post("/properties", verifyToken, verifyAgent, async (req, res) => {
+      const property = req.body;
+      const result = await propertiesCollection.insertOne(property);
+      res.send(result);
+    });
+  app.get("/properties/:id", async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await usersCollection.findOne(query);
+    res.send(result);
+  });
+    app.delete("/properties/:id", verifyToken, verifyAgent, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await propertiesCollection.deleteOne(query);
+      res.send(result);
+    })
+
+
+
+    // ====================================================================
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
