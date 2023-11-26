@@ -30,7 +30,9 @@ async function run() {
 
     // db collections
     const usersCollection = client.db("dreamHomeDB").collection("users");
-    const propertiesCollection = client.db("dreamHomeDB").collection("properties");
+    const propertiesCollection = client
+      .db("dreamHomeDB")
+      .collection("properties");
 
     // jwt token api
     app.post("/jwt", async (req, res) => {
@@ -46,14 +48,14 @@ async function run() {
       if (!req.headers.authorization) {
         return res.status(401).send({ message: "unauthorized" });
       }
-      const token = req.headers.authorization.split(' ')[1];
+      const token = req.headers.authorization.split(" ")[1];
       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
           return res.status(401).send({ message: "unauthorized" });
         }
         req.decoded = decoded;
         next();
-      })
+      });
     };
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
@@ -65,7 +67,7 @@ async function run() {
       }
       next();
     };
-    
+
     const verifyAgent = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email };
@@ -77,7 +79,7 @@ async function run() {
       next();
     };
 
-// =============================== admin ======================================
+    // =============================== admin ======================================
     // admin related api
     app.get("/users/role/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -108,11 +110,10 @@ async function run() {
     //   const user = await usersCollection.findOne(query);
     //   let agent = false;
     //   if (user) {
-        
+
     //   }
     //   res.send({ agent });
     // });
-
 
     app.get("/users", verifyToken, async (req, res) => {
       const result = await usersCollection.find().toArray();
@@ -171,20 +172,48 @@ async function run() {
       const result = await propertiesCollection.insertOne(property);
       res.send(result);
     });
-  app.get("/properties/:id", async (req, res) => {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const result = await usersCollection.findOne(query);
-    res.send(result);
-  });
-    app.delete("/properties/:id", verifyToken, verifyAgent, async (req, res) => {
+    app.get("/properties/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await propertiesCollection.deleteOne(query);
+      const result = await propertiesCollection.findOne(query);
       res.send(result);
-    })
-
-
+    });
+    app.patch(
+      "/properties/:id",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const id = req.params.id;
+        const data = req.body;
+        const options = { upsert: true };
+        const filter = { _id: new ObjectId(id) };
+        const updatedData = {
+          $set: {
+            propertyTitle: data.propertyTitle,
+            propertyLocation: data.propertyLocation,
+            propertyPrice: data.propertyPrice,
+            propertyImage: data.propertyImage,
+          },
+        };
+        const result = await propertiesCollection.updateOne(
+          filter,
+          updatedData,
+          options
+        );
+        res.send(result);
+      }
+    );
+    app.delete(
+      "/properties/:id",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await propertiesCollection.deleteOne(query);
+        res.send(result);
+      }
+    );
 
     // ====================================================================
     console.log(
