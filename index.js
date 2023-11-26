@@ -79,7 +79,10 @@ async function run() {
         admin = user?.role === "admin";
         agent = user?.role === "agent";
       }
-      res.send({ admin, agent });
+
+      const userData = await usersCollection.findOne({ email });
+
+      res.send({ admin, agent, userData });
     });
 
     // agent related api
@@ -98,9 +101,6 @@ async function run() {
     // });
 
 
-
-
-
     app.get("/users", verifyToken, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
@@ -116,12 +116,14 @@ async function run() {
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
+
     app.get("/users/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await usersCollection.findOne(query);
       res.send(result);
     });
+
     app.patch("/users/role/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const data = req.body;
