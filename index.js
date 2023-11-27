@@ -162,8 +162,51 @@ async function run() {
       res.send(result);
     });
 
+    // properties related api
+    // verified property
+    app.patch(
+      "/properties/verified/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updatedData = {
+          $set: {
+            status: "verified",
+          },
+        };
+        const result = await propertiesCollection.updateOne(
+          filter,
+          updatedData
+        );
+        res.send(result);
+      }
+    );
+
+    // rejected property
+    app.patch(
+      "/properties/rejected/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updatedData = {
+          $set: {
+            status: "rejected",
+          },
+        };
+        const result = await propertiesCollection.updateOne(
+          filter,
+          updatedData
+        );
+        res.send(result);
+      }
+    );
+
     // ================================ agent ====================================
-    app.get("/properties", verifyToken, verifyAgent, async (req, res) => {
+    app.get("/properties", verifyToken, async (req, res) => {
       const result = await propertiesCollection.find().toArray();
       res.send(result);
     });
@@ -178,31 +221,26 @@ async function run() {
       const result = await propertiesCollection.findOne(query);
       res.send(result);
     });
-    app.patch(
-      "/properties/:id",
-      verifyToken,
-      verifyAgent,
-      async (req, res) => {
-        const id = req.params.id;
-        const data = req.body;
-        const options = { upsert: true };
-        const filter = { _id: new ObjectId(id) };
-        const updatedData = {
-          $set: {
-            propertyTitle: data.propertyTitle,
-            propertyLocation: data.propertyLocation,
-            propertyPrice: data.propertyPrice,
-            propertyImage: data.propertyImage,
-          },
-        };
-        const result = await propertiesCollection.updateOne(
-          filter,
-          updatedData,
-          options
-        );
-        res.send(result);
-      }
-    );
+    app.patch("/properties/:id", verifyToken, verifyAgent, async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const options = { upsert: true };
+      const filter = { _id: new ObjectId(id) };
+      const updatedData = {
+        $set: {
+          propertyTitle: data.propertyTitle,
+          propertyLocation: data.propertyLocation,
+          propertyPrice: data.propertyPrice,
+          propertyImage: data.propertyImage,
+        },
+      };
+      const result = await propertiesCollection.updateOne(
+        filter,
+        updatedData,
+        options
+      );
+      res.send(result);
+    });
     app.delete(
       "/properties/:id",
       verifyToken,
