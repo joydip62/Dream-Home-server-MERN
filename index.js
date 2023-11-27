@@ -262,7 +262,11 @@ async function run() {
         const review = req.body;
         const result = await reviewsCollection.insertOne(review);
         res.send(result);
-      });
+    });
+    app.get("/reviews", verifyToken, async (req, res) => {
+      const result = await reviewsCollection.find().toArray();
+      res.send(result);
+    });
 
     // ====================================================================
     console.log(
