@@ -276,12 +276,22 @@ async function run() {
     });
 
     // user wishlist
-      app.post("/wishLists", verifyToken, async (req, res) => {
-        const wishList = req.body;
-        const result = await wishListsCollection.insertOne(wishList);
-        res.send(result);
-      });
+    app.post("/wishLists", verifyToken, async (req, res) => {
+      const wishList = req.body;
+      const result = await wishListsCollection.insertOne(wishList);
+      res.send(result);
+    });
+    app.get("/wishLists", verifyToken, async (req, res) => {
+      const result = await wishListsCollection.find().toArray();
+      res.send(result);
+    });
 
+    app.delete("/wishLists/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await wishListsCollection.deleteOne(query);
+      res.send(result);
+    });
     // ====================================================================
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
