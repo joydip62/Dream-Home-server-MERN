@@ -33,10 +33,10 @@ async function run() {
     const propertiesCollection = client
       .db("dreamHomeDB")
       .collection("properties");
-    const reviewsCollection = client
+    const reviewsCollection = client.db("dreamHomeDB").collection("reviews");
+    const wishListsCollection = client
       .db("dreamHomeDB")
-      .collection("reviews");
-    
+      .collection("wishLists");
 
     // jwt token api
     app.post("/jwt", async (req, res) => {
@@ -258,21 +258,30 @@ async function run() {
     );
 
     // =========================== user ===================================
+    // user review
     app.post("/reviews", verifyToken, async (req, res) => {
-        const review = req.body;
-        const result = await reviewsCollection.insertOne(review);
-        res.send(result);
+      const review = req.body;
+      const result = await reviewsCollection.insertOne(review);
+      res.send(result);
     });
     app.get("/reviews", verifyToken, async (req, res) => {
       const result = await reviewsCollection.find().toArray();
       res.send(result);
     });
- app.delete("/reviews/:id", verifyToken, async (req, res) => {
-   const id = req.params.id;
-   const query = { _id: new ObjectId(id) };
-   const result = await reviewsCollection.deleteOne(query);
-   res.send(result);
- });
+    app.delete("/reviews/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await reviewsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // user wishlist
+      app.post("/wishLists", verifyToken, async (req, res) => {
+        const wishList = req.body;
+        const result = await wishListsCollection.insertOne(wishList);
+        res.send(result);
+      });
+
     // ====================================================================
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
