@@ -267,7 +267,12 @@ async function run() {
       const result = await reviewsCollection.find().toArray();
       res.send(result);
     });
-
+ app.delete("/reviews/:id", verifyToken, async (req, res) => {
+   const id = req.params.id;
+   const query = { _id: new ObjectId(id) };
+   const result = await reviewsCollection.deleteOne(query);
+   res.send(result);
+ });
     // ====================================================================
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
