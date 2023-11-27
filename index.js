@@ -33,6 +33,10 @@ async function run() {
     const propertiesCollection = client
       .db("dreamHomeDB")
       .collection("properties");
+    const reviewsCollection = client
+      .db("dreamHomeDB")
+      .collection("reviews");
+    
 
     // jwt token api
     app.post("/jwt", async (req, res) => {
@@ -252,6 +256,13 @@ async function run() {
         res.send(result);
       }
     );
+
+    // =========================== user ===================================
+    app.post("/reviews", verifyToken, async (req, res) => {
+        const review = req.body;
+        const result = await reviewsCollection.insertOne(review);
+        res.send(result);
+      });
 
     // ====================================================================
     console.log(
