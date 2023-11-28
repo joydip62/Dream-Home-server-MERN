@@ -260,6 +260,44 @@ async function run() {
       }
     );
 
+    // accept property
+    app.patch("/offers/accept/:id", verifyToken, verifyAgent, async (req, res) => {
+      const id = req.params.id;
+      const options = { upsert: true };
+      const filter = { _id: new ObjectId(id) };
+      const updatedData = {
+        $set: {
+          status: "accepted"
+        },
+      };
+      const result = await makeOffersCollection.updateOne(
+        filter,
+        updatedData,
+        options
+      );
+      res.send(result);
+    });
+
+    
+    // reject property
+    app.patch("/offers/reject/:id", verifyToken, verifyAgent, async (req, res) => {
+      const id = req.params.id;
+      const options = { upsert: true };
+      const filter = { _id: new ObjectId(id) };
+      const updatedData = {
+        $set: {
+          status: "rejected"
+        },
+      };
+      const result = await makeOffersCollection.updateOne(
+        filter,
+        updatedData,
+        options
+      );
+      res.send(result);
+    });
+
+
     // =========================== user ===================================
     // user review
     app.post("/reviews", verifyToken, async (req, res) => {
