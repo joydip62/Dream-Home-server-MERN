@@ -2,7 +2,9 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const stripe = require("stripe")(
+  "sk_test_51JRYnrSF5YBIw6riKPdlGzABEg2kRo1AhmPNefXnBuMYqa1P5UduKgMXZY9iCFxvXzQguCtoPZl25zbQu2sg5EOj00KPkTJ8P2"
+);
 const port = process.env.PORT || 5000;
 require("dotenv").config();
 
@@ -41,6 +43,7 @@ async function run() {
     const makeOffersCollection = client
       .db("dreamHomeDB")
       .collection("makeOffers");
+    const paymentCollection = client.db("dreamHomeDB").collection("payments");
 
     // jwt token api
     app.post("/jwt", async (req, res) => {
@@ -378,6 +381,22 @@ async function run() {
       const result = await makeOffersCollection.find().toArray();
       res.send(result);
     });
+     app.patch("/makeOffers/:id", verifyToken, async (req, res) => {
+       const id = req.params.id;
+       const options = { upsert: true };
+       const filter = { _id: new ObjectId(id) };
+       const updatedData = {
+         $set: {
+           status: "bought",
+         },
+       };
+       const result = await makeOffersCollection.updateOne(
+         filter,
+         updatedData,
+         options
+       );
+       res.send(result);
+     });
     app.delete("/makeOffers/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -393,21 +412,42 @@ async function run() {
       res.send(result);
     });
 
-        app.post("/create-payment-intent", async (req, res) => {
-          const { price } = req.body;
-          const amount = parseInt(price * 100);
-          console.log(amount, "amount inside the intent");
+    // payment intent
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
 
-          const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount,
-            currency: "inr",
-            payment_method_types: ["card"],
-          });
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "inr",
+        payment_method_types: ["card"],
+      });
 
-          res.send({
-            clientSecret: paymentIntent.client_secret,
-          });
-        });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    app.get("/payments/:email", verifyToken, async (req, res) => {
+      const query = { email: req.params.email };
+      if (req.params.email !== req.decoded.email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.post("/payments", async (req, res) => {
+      const payment = req.body;
+      const paymentResult = await paymentCollection.insertOne(payment);
+      res.send({ paymentResult });
+    });
+
+    // bought property
+    app.get("/boughtProperty", verifyToken, async (req, res) => {
+      const result = await paymentCollection.find().toArray();
+      res.send(result);
+    });
     // ====================================================================
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
