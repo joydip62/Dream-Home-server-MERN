@@ -173,6 +173,22 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/users/:id", verifyToken, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const options = { upsert: true };
+      const filter = { _id: new ObjectId(id) };
+      const updatedData = {
+        $set: {
+          status: "fraud",
+        },
+      };
+      const result = await usersCollection.updateOne(
+        filter,
+        updatedData,
+        options
+      );
+      res.send(result);
+    });
     // properties related api
     // verified property
     app.patch(
@@ -215,6 +231,7 @@ async function run() {
         res.send(result);
       }
     );
+
 
     // ================================ agent ====================================
     app.get("/properties", verifyToken, async (req, res) => {
@@ -381,22 +398,22 @@ async function run() {
       const result = await makeOffersCollection.find().toArray();
       res.send(result);
     });
-     app.patch("/makeOffers/:id", verifyToken, async (req, res) => {
-       const id = req.params.id;
-       const options = { upsert: true };
-       const filter = { _id: new ObjectId(id) };
-       const updatedData = {
-         $set: {
-           status: "bought",
-         },
-       };
-       const result = await makeOffersCollection.updateOne(
-         filter,
-         updatedData,
-         options
-       );
-       res.send(result);
-     });
+    app.patch("/makeOffers/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const options = { upsert: true };
+      const filter = { _id: new ObjectId(id) };
+      const updatedData = {
+        $set: {
+          status: "bought",
+        },
+      };
+      const result = await makeOffersCollection.updateOne(
+        filter,
+        updatedData,
+        options
+      );
+      res.send(result);
+    });
     app.delete("/makeOffers/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
