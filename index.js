@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 5000;
 require("dotenv").config();
 
@@ -261,42 +262,50 @@ async function run() {
     );
 
     // accept property
-    app.patch("/offers/accept/:id", verifyToken, verifyAgent, async (req, res) => {
-      const id = req.params.id;
-      const options = { upsert: true };
-      const filter = { _id: new ObjectId(id) };
-      const updatedData = {
-        $set: {
-          status: "accepted"
-        },
-      };
-      const result = await makeOffersCollection.updateOne(
-        filter,
-        updatedData,
-        options
-      );
-      res.send(result);
-    });
+    app.patch(
+      "/offers/accept/:id",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const id = req.params.id;
+        const options = { upsert: true };
+        const filter = { _id: new ObjectId(id) };
+        const updatedData = {
+          $set: {
+            status: "accepted",
+          },
+        };
+        const result = await makeOffersCollection.updateOne(
+          filter,
+          updatedData,
+          options
+        );
+        res.send(result);
+      }
+    );
 
-    
     // reject property
-    app.patch("/offers/reject/:id", verifyToken, verifyAgent, async (req, res) => {
-      const id = req.params.id;
-      const options = { upsert: true };
-      const filter = { _id: new ObjectId(id) };
-      const updatedData = {
-        $set: {
-          status: "rejected"
-        },
-      };
-      const result = await makeOffersCollection.updateOne(
-        filter,
-        updatedData,
-        options
-      );
-      res.send(result);
-    });
-
+    app.patch(
+      "/offers/reject/:id",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const id = req.params.id;
+        const options = { upsert: true };
+        const filter = { _id: new ObjectId(id) };
+        const updatedData = {
+          $set: {
+            status: "rejected",
+          },
+        };
+        const result = await makeOffersCollection.updateOne(
+          filter,
+          updatedData,
+          options
+        );
+        res.send(result);
+      }
+    );
 
     // =========================== user ===================================
     // user review
@@ -375,6 +384,30 @@ async function run() {
       const result = await makeOffersCollection.deleteOne(query);
       res.send(result);
     });
+
+    // payment intent
+    app.get("/userPay/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await makeOffersCollection.findOne(query);
+      res.send(result);
+    });
+
+        app.post("/create-payment-intent", async (req, res) => {
+          const { price } = req.body;
+          const amount = parseInt(price * 100);
+          console.log(amount, "amount inside the intent");
+
+          const paymentIntent = await stripe.paymentIntents.create({
+            amount: amount,
+            currency: "inr",
+            payment_method_types: ["card"],
+          });
+
+          res.send({
+            clientSecret: paymentIntent.client_secret,
+          });
+        });
     // ====================================================================
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
