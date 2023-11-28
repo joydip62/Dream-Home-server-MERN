@@ -37,6 +37,9 @@ async function run() {
     const wishListsCollection = client
       .db("dreamHomeDB")
       .collection("wishLists");
+    const makeOffersCollection = client
+      .db("dreamHomeDB")
+      .collection("makeOffers");
 
     // jwt token api
     app.post("/jwt", async (req, res) => {
@@ -286,10 +289,34 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/wishLists/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await wishListsCollection.findOne(query);
+      res.send(result);
+    });
+
     app.delete("/wishLists/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await wishListsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // make an offer api
+    app.post("/makeOffers", verifyToken, async (req, res) => {
+      const makeOffer = req.body;
+      const result = await makeOffersCollection.insertOne(makeOffer);
+      res.send(result);
+    });
+    app.get("/makeOffers", verifyToken, async (req, res) => {
+      const result = await makeOffersCollection.find().toArray();
+      res.send(result);
+    });
+    app.delete("/makeOffers/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await makeOffersCollection.deleteOne(query);
       res.send(result);
     });
     // ====================================================================
