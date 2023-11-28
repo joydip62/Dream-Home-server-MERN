@@ -296,6 +296,24 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/wishLists/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const options = { upsert: true };
+      const filter = { _id: new ObjectId(id) };
+      const updatedData = {
+        $set: {
+          status: "makeOffered",
+        },
+      };
+      const result = await wishListsCollection.updateOne(
+        filter,
+        updatedData,
+        options
+      );
+      res.send(result);
+    });
+
     app.delete("/wishLists/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
