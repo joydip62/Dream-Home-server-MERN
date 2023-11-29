@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const stripe = require("stripe")(
   "sk_test_51JRYnrSF5YBIw6riKPdlGzABEg2kRo1AhmPNefXnBuMYqa1P5UduKgMXZY9iCFxvXzQguCtoPZl25zbQu2sg5EOj00KPkTJ8P2"
 );
+
 const port = process.env.PORT || 5000;
 require("dotenv").config();
 
@@ -29,7 +30,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     // Get the database and collection on which to run the operation
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
 
     // db collections
     const usersCollection = client.db("dreamHomeDB").collection("users");
@@ -190,6 +191,32 @@ async function run() {
       res.send(result);
     });
     // properties related api
+    app.get("/properties", verifyToken, verifyAdmin, async (req, res) => {
+      const result = await propertiesCollection.find().toArray();
+      res.send(result);
+    });
+    // making advertise the property
+    app.patch(
+      "/properties/advertise/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const data = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updatedData = {
+          $set: {
+            advertise: data,
+          },
+        };
+        const result = await propertiesCollection.updateOne(
+          filter,
+          updatedData
+        );
+        res.send(result);
+      }
+    );
+
     // verified property
     app.patch(
       "/properties/verified/:id",
@@ -231,7 +258,6 @@ async function run() {
         res.send(result);
       }
     );
-
 
     // ================================ agent ====================================
     app.get("/properties", verifyToken, async (req, res) => {
@@ -281,7 +307,7 @@ async function run() {
       }
     );
 
-    // accept property
+    // accept property offer
     app.patch(
       "/offers/accept/:id",
       verifyToken,
@@ -304,7 +330,7 @@ async function run() {
       }
     );
 
-    // reject property
+    // reject property offer
     app.patch(
       "/offers/reject/:id",
       verifyToken,
