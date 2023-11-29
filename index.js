@@ -493,10 +493,14 @@ async function run() {
     });
 
     // home page api
-        app.get("/advertiseProperties", async (req, res) => {
-          const result = await propertiesCollection.find().toArray();
-          res.send(result);
-        });
+    app.get("/advertiseProperties", async (req, res) => {
+      const result = await propertiesCollection.find().toArray();
+      res.send(result);
+    });
+    app.get("/usersReviews", async (req, res) => {
+      const result = await reviewsCollection.find().toArray();
+      res.send(result);
+    });
     // ====================================================================
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
