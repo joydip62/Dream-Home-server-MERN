@@ -206,7 +206,7 @@ async function run() {
         const filter = { _id: new ObjectId(id) };
         const updatedData = {
           $set: {
-            advertise: data,
+            advertise: data.advertise,
           },
         };
         const result = await propertiesCollection.updateOne(
@@ -491,6 +491,12 @@ async function run() {
       const result = await paymentCollection.find().toArray();
       res.send(result);
     });
+
+    // home page api
+        app.get("/advertiseProperties", async (req, res) => {
+          const result = await propertiesCollection.find().toArray();
+          res.send(result);
+        });
     // ====================================================================
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
