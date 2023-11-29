@@ -2,9 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const stripe = require("stripe")(
-  "sk_test_51JRYnrSF5YBIw6riKPdlGzABEg2kRo1AhmPNefXnBuMYqa1P5UduKgMXZY9iCFxvXzQguCtoPZl25zbQu2sg5EOj00KPkTJ8P2"
-);
+const stripe = require("stripe")("sk_test_51JRYnrSF5YBIw6riKPdlGzABEg2kRo1AhmPNefXnBuMYqa1P5UduKgMXZY9iCFxvXzQguCtoPZl25zbQu2sg5EOj00KPkTJ8P2");
 
 const port = process.env.PORT || 5000;
 require("dotenv").config();
@@ -191,7 +189,7 @@ async function run() {
       res.send(result);
     });
     // properties related api
-    app.get("/properties", verifyToken, verifyAdmin, async (req, res) => {
+    app.get("/properties", verifyToken, async (req, res) => {
       const result = await propertiesCollection.find().toArray();
       res.send(result);
     });
@@ -260,10 +258,10 @@ async function run() {
     );
 
     // ================================ agent ====================================
-    app.get("/properties", verifyToken, async (req, res) => {
-      const result = await propertiesCollection.find().toArray();
-      res.send(result);
-    });
+    // app.get("/properties", verifyToken, async (req, res) => {
+    //   const result = await propertiesCollection.find().toArray();
+    //   res.send(result);
+    // });
     app.post("/properties", verifyToken, verifyAgent, async (req, res) => {
       const property = req.body;
       const result = await propertiesCollection.insertOne(property);
